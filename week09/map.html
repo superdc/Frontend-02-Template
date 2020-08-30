@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>map</title>
+  <style>
+    #container{
+      width: 700px;
+      font-size: 0;
+    }
+    .cell{
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background-color: lightgray;
+      border: 1px solid #fff;
+      border-top: none;
+      border-left: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <button onclick="localStorage['map']=JSON.stringify(map)">save</button>
+  <script>
+    let map = localStorage['map'] ? JSON.parse(localStorage['map']) : Array(10000).fill(0);
+    const container = document.getElementById('container');
+    for(let i=0; i<100; i++){
+      for(let j=0; j<100; j++){
+        const div = document.createElement('div');
+        div.classList.add('cell');
+        if(map[100*i+j]===1){
+          div.style.backgroundColor = 'black';
+        }
+        div.addEventListener('mouseover', ()=>{
+          if(mousedown){
+            if(clear){
+              map[100*i+j] = 0;
+              div.style.backgroundColor = '';
+            }else{
+              map[100*i+j] = 1;
+              div.style.backgroundColor = 'black';
+            }
+          }
+        });
+        container.appendChild(div);
+      }
+    }
+    let mousedown = false;
+    let clear = false;
+    document.addEventListener('mousedown', (e)=>{
+      mousedown = true;
+      clear = ( e.which === 3);
+    });
+    document.addEventListener('mouseup', ()=>{
+      mousedown = false;
+    });
+    document.addEventListener('contextmenu', (e)=>e.preventDefault())
+  </script>
+  <script>
+    function sleep(){
+      return new Promise((resolve) => setTimeout(resolve, 30));
+    }
+    async function path(map, start, end){
+      const container = document.getElementById('container');
+      const queue = [];
+      await insert(start[0], start[1]);
+      while(queue.length){
+        const next = queue.shift();
+        const [x, y] = next;
+        // 到达终点
+        if(x === end[0] && y === end[1]){
+          container.children[x+100*y].style.backgroundColor = 'blue';
+          return true;
+        }
+        // 上下左右斜点插入 queue 中
+        await insert(x, y-1);
+        await insert(x, y+1);
+        await insert(x-1, y);
+        await insert(x+1, y);
+        await insert(x-1, y-1);
+        await insert(x-1, y+1);
+        await insert(x+1, y-1);
+        await insert(x+1, y+1);
+      }
+      async function insert(x,y){
+        // 超出地图边界
+        if(x<0 || y<0 || x>=100 || y>=100){
+          return;
+        }
+        if(map[x+100*y]){
+          return;
+        }
+        await sleep();
+        map[x+100*y] = 2;
+        container.children[x+100*y].style.backgroundColor = 'lightblue';
+        queue.push([x,y]);
+      }
+    }
+  </script>
+</body>
+</html>

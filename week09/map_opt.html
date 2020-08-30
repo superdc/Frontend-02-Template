@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>map</title>
+  <style>
+    #container{
+      width: 700px;
+      font-size: 0;
+    }
+    .cell{
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background-color: lightgray;
+      border: 1px solid #fff;
+      border-top: none;
+      border-left: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <button onclick="localStorage['map']=JSON.stringify(map)">save</button>
+  <script>
+    let map = localStorage['map'] ? JSON.parse(localStorage['map']) : Array(10000).fill(0);
+    const container = document.getElementById('container');
+    for(let i=0; i<100; i++){
+      for(let j=0; j<100; j++){
+        const div = document.createElement('div');
+        div.classList.add('cell');
+        if(map[100*i+j]===1){
+          div.style.backgroundColor = 'black';
+        }
+        div.addEventListener('mouseover', ()=>{
+          if(mousedown){
+            if(clear){
+              map[100*i+j] = 0;
+              div.style.backgroundColor = '';
+            }else{
+              map[100*i+j] = 1;
+              div.style.backgroundColor = 'black';
+            }
+          }
+        });
+        container.appendChild(div);
+      }
+    }
+    let mousedown = false;
+    let clear = false;
+    document.addEventListener('mousedown', (e)=>{
+      mousedown = true;
+      clear = ( e.which === 3);
+    });
+    document.addEventListener('mouseup', ()=>{
+      mousedown = false;
+    });
+    document.addEventListener('contextmenu', (e)=>e.preventDefault())
+  </script>
+  <script>
+    class Sorted{
+      constructor(data, compare){
+        this.data = data.slice();
+        this.compare = compare || ((a, b) => a-b);
+      }
+      take(){
+        if(!this.data.length){
+          return;
+        }
+        let min = this.data[0];
+        let minIndex = 0;
+        for(let i=0; i<this.data.length; i++){
+          if(this.compare(this.data[i], min)<0){
+            min = this.data[i];
+            minIndex = i;
+          }
+        }
+        // 返回最小元素，并从数组中删除。
+        // 因为是无序数据，可以不考虑元素的顺序，将最小元素与最后元素交换位置，并将最后元素删除，可令算法复杂度为 O(1)
+        this.data[minIndex] = this.data[this.data.length - 1];
+        this.data.pop();
+        return min; 
+      }
+      give(v){
+        this.data.push(v);
+      }
+      get length(){
+        return this.data.length;
+      }
+    }
+  </script>
+  <script>
+    function sleep(){
+      return new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    async function findPath(map, start, end){
+      const table = Object.create(map);
+      const container = document.getElementById('container');
+      const queue = new Sorted([start], (a,b)=>(distance(a)-distance(b)));
+      while(queue.length){
+        const next = queue.take();
+        let [x, y] = next;
+        // 到达终点
+        if(x === end[0] && y === end[1]){
+          let path = [];
+          while(x !== start[0] && y !== start[1]){
+            [x,y] = table[x + 100*y];
+            container.children[x+100*y].style.backgroundColor = 'purple';
+          }
+          return true;
+        }
+        // 上下左右斜点插入 queue 中
+        await insert(x, y-1, [x,y]);
+        await insert(x, y+1, [x,y]);
+        await insert(x-1, y, [x,y]);
+        await insert(x+1, y, [x,y]);
+        await insert(x-1, y-1, [x,y]);
+        await insert(x-1, y+1, [x,y]);
+        await insert(x+1, y-1, [x,y]);
+        await insert(x+1, y+1, [x,y]);
+      }
+      async function insert(x,y,pre){
+        // 超出地图边界
+        if(x<0 || y<0 || x>=100 || y>=100){
+          return;
+        }
+        if(table[x+100*y]){
+          return;
+        }
+        await sleep();
+        container.children[x+100*y].style.backgroundColor = 'lightblue';
+        table[x+100*y] = pre;
+        queue.give([x,y]);
+      }
+      function distance(point){
+        return (point[0]-start[0])**2 + (point[1]-start[1])**2 + (point[0]-end[0])**2 + (point[1]-end[1])**2;
+      }
+    }
+  </script>
+</body>
+</html>

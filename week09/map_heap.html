@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>map</title>
+  <style>
+    #container{
+      width: 700px;
+      font-size: 0;
+    }
+    .cell{
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background-color: lightgray;
+      border: 1px solid #fff;
+      border-top: none;
+      border-left: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <button onclick="localStorage['map']=JSON.stringify(map)">save</button>
+  <script>
+    let map = localStorage['map'] ? JSON.parse(localStorage['map']) : Array(10000).fill(0);
+    const container = document.getElementById('container');
+    for(let i=0; i<100; i++){
+      for(let j=0; j<100; j++){
+        const div = document.createElement('div');
+        div.classList.add('cell');
+        if(map[100*i+j]===1){
+          div.style.backgroundColor = 'black';
+        }
+        div.addEventListener('mouseover', ()=>{
+          if(mousedown){
+            if(clear){
+              map[100*i+j] = 0;
+              div.style.backgroundColor = '';
+            }else{
+              map[100*i+j] = 1;
+              div.style.backgroundColor = 'black';
+            }
+          }
+        });
+        container.appendChild(div);
+      }
+    }
+    let mousedown = false;
+    let clear = false;
+    document.addEventListener('mousedown', (e)=>{
+      mousedown = true;
+      clear = ( e.which === 3);
+    });
+    document.addEventListener('mouseup', ()=>{
+      mousedown = false;
+    });
+    document.addEventListener('contextmenu', (e)=>e.preventDefault())
+  </script>
+  <script>
+    class Heap{
+      constructor(data, compare){
+        this.data = data.slice();
+        this.compare = compare || ((a, b) => a-b);
+      }
+      take(){
+        if(!this.data.length){
+          return;
+        }
+        let min = this.data[0];
+        let i = 0;
+        // 调整堆
+        while(i < this.length){
+          if(this.leftIndex(i) >= this.length) break;
+          if(this.rightIndex(i) >= this.length){
+            this.data[i] = this.left(i);
+            i = this.leftIndex(i);
+            break;
+          }
+          if(this.compare(this.left(i), this.right(i))<0){
+            this.data[i] = this.left(i);
+            i = this.leftIndex(i);
+          }else{
+            this.data[i] = this.right(i);
+            i = this.rightIndex(i);
+          }
+        }
+        if(i<this.length -1){
+          this.insertAt(i, this.data.pop());
+        }else{
+          this.data.pop();
+        }
+        return min; 
+      }
+      leftIndex(i){
+        return i*2 + 1;
+      }
+      left(i){
+        return this.data[this.leftIndex(i)];
+      }
+      rightIndex(i){
+        return i*2 + 2;
+      }
+      right(i){
+        return this.data[this.rightIndex(i)];
+      }
+      parentIndex(i){
+        return Math.floor((i-1)/2);
+      }
+      parent(i){
+        return this.data[this.parentIndex(i)];
+      }
+      insertAt(i, v){
+        this.data[i] = v;
+        // 调整堆结构
+        while(i>0 && this.compare(v, this.parent(i))<0){
+          this.data[i] = this.parent(i);
+          this.data[this.parentIndex(i)] = v;
+          i = this.parentIndex(i);
+        }
+      }
+      insert(v){
+        // 最后一个位置插入 v
+        let i = this.length;
+        this.insertAt(i, v);
+      }
+      get length(){
+        return this.data.length;
+      }
+    }
+  </script>
+  <script>
+    function sleep(){
+      return new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    async function findPath(map, start, end){
+      const table = Object.create(map);
+      const container = document.getElementById('container');
+      const heap = new Heap([start], (a,b)=>(distance(a)-distance(b)));
+      table[start[0]+100*start[1]] = start;
+      while(heap.length){
+        const next = heap.take();
+        let [x, y] = next;
+        // 到达终点
+        if(x === end[0] && y === end[1]){
+          let path = [];
+          while(x !== start[0] && y !== start[1]){
+            [x,y] = table[x + 100*y];
+            container.children[x+100*y].style.backgroundColor = 'purple';
+          }
+          return true;
+        }
+        // 上下左右斜点插入 queue 中
+        await insert(x, y-1, [x,y]);
+        await insert(x, y+1, [x,y]);
+        await insert(x-1, y, [x,y]);
+        await insert(x+1, y, [x,y]);
+        await insert(x-1, y-1, [x,y]);
+        await insert(x-1, y+1, [x,y]);
+        await insert(x+1, y-1, [x,y]);
+        await insert(x+1, y+1, [x,y]);
+      }
+      async function insert(x,y,pre){
+        // 超出地图边界
+        if(x<0 || y<0 || x>=100 || y>=100){
+          return;
+        }
+        if(table[x+100*y]){
+          return;
+        }
+        await sleep();
+        container.children[x+100*y].style.backgroundColor = 'lightblue';
+        table[x+100*y] = pre;
+        heap.insert([x,y]);
+      }
+      function distance(point){
+        return (point[0]-start[0])**2 + (point[1]-start[1])**2 + (point[0]-end[0])**2 + (point[1]-end[1])**2;
+      }
+    }
+  </script>
+</body>
+</html>

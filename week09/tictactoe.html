@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TicTacToe</title>
+  <style>
+    #board{
+      display: flex;
+      flex-wrap: wrap;
+      width: 303px;
+      height: 303px;
+    }
+    .cell{
+      width: 100px;
+      height: 100px;
+      margin: 0 1px 1px 0;
+      background-color: lightgreen;
+      text-align: center;
+      line-height: 100px;
+      font-size: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div id="board"></div>
+  <script>
+    /*
+     * TicTacToe - 三子棋
+     * 规则：3x3 棋盘，双方交替下子，先连成一条线（水平，垂直，斜）的一方获胜
+     * 用二维数组表示棋盘，先下的一方表示为 1 -> ⭕️，后下一方表示为 2 -> ❌
+     */
+    let pattern = [
+      [0,0,0],
+      [0,0,0],
+      [0,0,0]
+    ];
+    let color = 1;
+    let win = false;
+    function show(){
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      for(let i=0; i<3; i++){
+        for(let j=0; j<3; j++){
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.innerText = pattern[i][j] === 2 ? '❌' : (pattern[i][j] === 1 ? '⭕️' : '');
+          cell.addEventListener('click', ()=>userMove(i,j));
+          board.appendChild(cell);
+        }
+      }
+    }
+    function userMove(y, x){
+      // 有一方赢了，就不能再下了
+      if(win) return;
+      // 有棋子，直接返回
+      if(pattern[y][x]) return;
+      pattern[y][x] = color;
+      // 判断是否赢了
+      if(check(pattern, color)){
+        win = true;
+        alert(color === 1 ? '⭕️ is winner' : '❌ is winner');
+      }
+      color = 3 - color;
+      console.log(bestChoice(pattern, color));
+      show();
+      computerMove();
+    }
+    function computerMove(){
+      let {point, result} = bestChoice(pattern, color);
+      if(point){
+        pattern[point[0]][point[1]] = color;
+      }
+      if(check(pattern, color)){
+        win = true;
+        alert(color === 1 ? '⭕️ is winner' : '❌ is winner');
+      }
+      color = 3-color;
+      show();
+    }
+
+    function bestChoice(pattern, color){
+      let p;
+      if(p=willWin(pattern, color)){
+        return {
+          point: p,
+          result: 1
+        }
+      }
+      let result = -2;
+      let point = null;
+      outer: for(let i=0; i<3; i++){
+        for(let j=0; j<3; j++){
+          if(pattern[i][j]){
+            continue;
+          }
+          const tmp = clone(pattern);
+          tmp[i][j] = color;
+          let r = bestChoice(tmp, 3-color).result;
+          if(-r > result){
+            result = -r;
+            point = [i,j];
+          }
+          if(result === 1){
+            break outer;
+          }
+        }
+      }
+      return {
+        point,
+        result: point ? result : 0
+      }
+    }
+    function clone(pattern){
+      return JSON.parse(JSON.stringify(pattern));
+    }
+    function willWin(pattern, color){
+      for(let i=0; i<3; i++){
+        for(let j=0; j<3; j++){
+          if(pattern[i][j]){
+            continue;
+          }
+          const tmp = clone(pattern);
+          tmp[i][j] = color;
+          if(check(tmp, color)){
+            return [i,j];
+          }
+        }
+      }
+      return null;
+    }
+    function check(pattern, color){
+      // 行
+      for(let i=0; i<3; i++){
+        let win = true;
+        for(let j=0; j<3; j++){
+          if(pattern[i][j] !== color){
+            win = false;
+            break;
+          }
+        }
+        if(win === true){
+          return true;
+        }
+      }
+      // 列
+      for(let i=0; i<3; i++){
+        let win = true;
+        for(let j=0; j<3; j++){
+          if(pattern[j][i] !== color){
+            win = false;
+          }
+        }
+        if(win === true){
+          return true;
+        }
+      }
+      // 斜线 
+      {
+        let win = true;
+        for(let i=0; i<3; i++){
+          if(pattern[i][i] !== color){
+            win = false;
+          }
+        }
+        if(win === true){
+          return true;
+        }
+      }
+      {
+        let win = true;
+        for(let i=0; i<3; i++){
+          if(pattern[i][2-i] !== color){
+            win = false;
+          }
+        }
+        if(win === true){
+          return true;
+        }
+      }
+    }
+    show();
+  </script>
+</body>
+</html>
