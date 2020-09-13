@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #dragable{
+      display: inline-block;
+      width: 100px;
+      height: 100px;
+      background-color: pink;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+    文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 文字 文字 文字  文字 文字 
+  </div>
+  <div id="dragable"></div>
+  <script>
+    addListeners()
+    
+    const container = document.getElementById('container')
+    let ranges = []
+    for(let i=0; i<container.childNodes[0].textContent.length; i++){
+      const range = document.createRange()
+      range.setStart(container.childNodes[0], i)
+      range.setEnd(container.childNodes[0],i)
+      ranges.push(range)
+    }
+
+    function getNearest(x,y){
+      let min = Infinity
+      let nearest = null
+      for(let range of ranges){
+        const rect = range.getBoundingClientRect()
+        const distance = (rect.x - x)**2 + (rect.y - y)**2
+        if(distance < min){
+          min = distance
+          nearset = range
+        }
+      }
+      return nearset
+    }
+
+    function addListeners(){
+      const dragableElem = document.getElementById('dragable')
+      let candrag = false
+      let baseX = 0
+      let baseY = 0
+      dragableElem.addEventListener('mousedown', (event)=>{
+        const initX = event.clientX
+        const initY = event.clientY
+        const move = (event)=>{
+          // const offsetX = baseX + event.clientX - initX
+          // const offsetY = baseY + event.clientY - initY
+          // dragableElem.style.transform = `translate(${offsetX}px, ${offsetY}px)`
+          const range = getNearest(event.clientX, event.clientY)
+          range.insertNode(dragableElem)
+        }
+        const up = (event)=>{
+          baseX = baseX + event.clientX - initX
+          baseY = baseY + event.clientY - initY
+          document.removeEventListener('mousemove', move)
+          document.removeEventListener('mouseup', up)
+        }
+        document.addEventListener('mousemove', move)
+        document.addEventListener('mouseup', up)
+      })
+      document.addEventListener('selectstart',(e)=>e.preventDefault())
+    }
+    
+  </script>
+</body>
+</html>
