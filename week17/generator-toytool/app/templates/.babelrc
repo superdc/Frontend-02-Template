@@ -1,0 +1,9 @@
+{
+  "plugins": [ "istanbul" ],
+  "presets": [
+    [
+      "@babel/preset-env"
+    ]
+  ],
+  "sourceMaps": "inline"
+}
